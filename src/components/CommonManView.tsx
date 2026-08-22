@@ -4,18 +4,18 @@ import {
   Heart, Activity, Shield, Sparkles, ArrowRight, CheckCircle2, AlertCircle, 
   HelpCircle, Volume2, User, Flame, TrendingDown, Clock, Info, Apple, 
   Footprints, Stethoscope, ChevronRight, RotateCcw, Award, Check, Phone, 
-  Lightbulb, AlertTriangle, MessageSquare, Sliders, Play, Smile, Frown, Meh, Globe
+  Lightbulb, AlertTriangle, Sliders, Play, Smile, Frown, Meh, Globe,
+  FileCheck, Upload, Scan, Camera, BookOpen, Plus, Minus, Zap, Droplet
 } from "lucide-react";
 import { PatientData, PredictionResult } from "../types";
-import VoiceAssistant from "./VoiceAssistant";
 import { Language, LANGUAGES, translations } from "../i18n";
+import LabReportScanner from "./LabReportScanner";
 
 interface CommonManViewProps {
   initialPatientData?: PatientData;
   predictionResult?: PredictionResult | null;
   onExecuteAnalysis: (data: PatientData) => Promise<void>;
   onSwitchToSpecialistMode: () => void;
-  onOpenAiChat: () => void;
   isLoading: boolean;
   language?: Language;
   onLanguageChange?: (lang: Language) => void;
@@ -26,12 +26,14 @@ export default function CommonManView({
   predictionResult,
   onExecuteAnalysis,
   onSwitchToSpecialistMode,
-  onOpenAiChat,
   isLoading,
   language = "en",
   onLanguageChange
 }: CommonManViewProps) {
   const t = translations[language] || translations.en;
+
+  // Citizen Name State
+  const [citizenName, setCitizenName] = useState<string>(initialPatientData?.name || "");
 
   // Input form state (with friendly defaults)
   const [age, setAge] = useState<number>(initialPatientData?.age || 45);
@@ -47,13 +49,17 @@ export default function CommonManView({
   const [weightKg, setWeightKg] = useState<number>(initialPatientData?.weight || 75);
 
   // Blood Pressure: either exact or friendly estimate
-  const [bpKnown, setBpKnown] = useState<"known" | "normal" | "high" | "unsure">("known");
+  const [bpKnown, setBpKnown] = useState<"normal" | "stage1" | "stage2" | "known">("known");
   const [systolicBP, setSystolicBP] = useState<number>(initialPatientData?.systolicBP || 120);
   const [diastolicBP, setDiastolicBP] = useState<number>(initialPatientData?.diastolicBP || 80);
 
   // Cholesterol: either exact or friendly estimate
-  const [cholKnown, setCholKnown] = useState<"known" | "normal" | "borderline" | "high" | "unsure">("normal");
+  const [cholKnown, setCholKnown] = useState<"normal" | "borderline" | "high" | "known">("normal");
   const [cholesterol, setCholesterol] = useState<number>(initialPatientData?.cholesterol || 190);
+
+  // Glucose / Blood Sugar: either exact or friendly estimate
+  const [glucoseKnown, setGlucoseKnown] = useState<"normal" | "pre" | "high" | "known">("normal");
+  const [glucose, setGlucose] = useState<number>(initialPatientData?.glucose || 90);
 
   // Lifestyle habits
   const [smoking, setSmoking] = useState<boolean>(initialPatientData?.smoking || false);
@@ -69,7 +75,114 @@ export default function CommonManView({
   const [simBPMeds, setSimBPMeds] = useState<boolean>(false);
 
   // Active sub-tab
-  const [activeSubTab, setActiveSubTab] = useState<"report" | "action_plan" | "faq_myths" | "doctor_questions">("report");
+  const [activeSubTab, setActiveSubTab] = useState<"report" | "pathology_guide" | "action_plan" | "faq_myths" | "doctor_questions">("report");
+  const [isLabScannerOpen, setIsLabScannerOpen] = useState<boolean>(false);
+
+  // Quick Preset Profiles for immediate hassle-free loading
+  const applyPresetProfile = (type: "young" | "middle" | "senior" | "reset") => {
+    if (type === "young") {
+      setAge(28);
+      setSex("male");
+      setHeightCm(175);
+      setWeightKg(68);
+      setBpKnown("normal");
+      setSystolicBP(115);
+      setDiastolicBP(75);
+      setCholKnown("normal");
+      setCholesterol(170);
+      setGlucoseKnown("normal");
+      setGlucose(85);
+      setSmoking(false);
+      setActivityLevel(2);
+      setHasDiabetes(false);
+      setFamilyHeartTrouble(false);
+      setTakingBpMeds(false);
+    } else if (type === "middle") {
+      setAge(48);
+      setSex("male");
+      setHeightCm(172);
+      setWeightKg(78);
+      setBpKnown("stage1");
+      setSystolicBP(132);
+      setDiastolicBP(85);
+      setCholKnown("borderline");
+      setCholesterol(210);
+      setGlucoseKnown("pre");
+      setGlucose(105);
+      setSmoking(false);
+      setActivityLevel(1);
+      setHasDiabetes(false);
+      setFamilyHeartTrouble(true);
+      setTakingBpMeds(false);
+    } else if (type === "senior") {
+      setAge(68);
+      setSex("female");
+      setHeightCm(162);
+      setWeightKg(70);
+      setBpKnown("stage2");
+      setSystolicBP(148);
+      setDiastolicBP(88);
+      setCholKnown("high");
+      setCholesterol(238);
+      setGlucoseKnown("high");
+      setGlucose(128);
+      setSmoking(false);
+      setActivityLevel(0);
+      setHasDiabetes(true);
+      setFamilyHeartTrouble(true);
+      setTakingBpMeds(true);
+    } else {
+      setAge(45);
+      setSex("male");
+      setHeightCm(170);
+      setWeightKg(72);
+      setBpKnown("normal");
+      setSystolicBP(120);
+      setDiastolicBP(80);
+      setCholKnown("normal");
+      setCholesterol(190);
+      setGlucoseKnown("normal");
+      setGlucose(90);
+      setSmoking(false);
+      setActivityLevel(1);
+      setHasDiabetes(false);
+      setFamilyHeartTrouble(false);
+      setTakingBpMeds(false);
+    }
+  };
+
+  const handleApplyCitizenLabReport = async (extracted: PatientData, runImmediately: boolean = true) => {
+    if (extracted.name) setCitizenName(extracted.name);
+    if (extracted.age) setAge(extracted.age);
+    if (extracted.sex) setSex(extracted.sex);
+    if (extracted.height) setHeightCm(extracted.height);
+    if (extracted.weight) setWeightKg(extracted.weight);
+    if (extracted.systolicBP) {
+      setSystolicBP(extracted.systolicBP);
+      setBpKnown("known");
+    }
+    if (extracted.diastolicBP) setDiastolicBP(extracted.diastolicBP);
+    if (extracted.cholesterol) {
+      setCholesterol(extracted.cholesterol);
+      setCholKnown("known");
+    }
+    if (extracted.glucose) {
+      setGlucose(extracted.glucose);
+      setGlucoseKnown("known");
+    }
+    if (extracted.smoking !== undefined) setSmoking(extracted.smoking);
+    if (extracted.physicalActivity !== undefined) setActivityLevel(extracted.physicalActivity);
+    if (extracted.diabetes !== undefined) setHasDiabetes(extracted.diabetes);
+    if (extracted.hypertensionHistory !== undefined) setTakingBpMeds(extracted.hypertensionHistory);
+    if (extracted.familyHistoryScore !== undefined) setFamilyHeartTrouble(extracted.familyHistoryScore > 4);
+
+    setIsLabScannerOpen(false);
+
+    if (runImmediately) {
+      await onExecuteAnalysis(extracted);
+      window.scrollTo({ top: 400, behavior: "smooth" });
+    }
+  };
 
   // Sync metric/imperial values
   useEffect(() => {
@@ -109,16 +222,21 @@ export default function CommonManView({
     let finalSystolic = systolicBP;
     let finalDiastolic = diastolicBP;
     if (bpKnown === "normal") { finalSystolic = 118; finalDiastolic = 76; }
-    else if (bpKnown === "high") { finalSystolic = 145; finalDiastolic = 92; }
-    else if (bpKnown === "unsure") { finalSystolic = 125; finalDiastolic = 80; }
+    else if (bpKnown === "stage1") { finalSystolic = 135; finalDiastolic = 86; }
+    else if (bpKnown === "stage2") { finalSystolic = 152; finalDiastolic = 94; }
 
     let finalChol = cholesterol;
-    if (cholKnown === "normal") finalChol = 180;
+    if (cholKnown === "normal") finalChol = 175;
     else if (cholKnown === "borderline") finalChol = 215;
     else if (cholKnown === "high") finalChol = 250;
-    else if (cholKnown === "unsure") finalChol = 195;
+
+    let finalGlucose = glucose;
+    if (glucoseKnown === "normal") finalGlucose = 88;
+    else if (glucoseKnown === "pre") finalGlucose = 112;
+    else if (glucoseKnown === "high") finalGlucose = 138;
 
     const patientPayload: PatientData = {
+      name: citizenName.trim() || undefined,
       age,
       sex,
       height: heightCm,
@@ -126,7 +244,7 @@ export default function CommonManView({
       systolicBP: finalSystolic,
       diastolicBP: finalDiastolic,
       cholesterol: finalChol,
-      glucose: hasDiabetes ? 140 : 90,
+      glucose: hasDiabetes ? Math.max(finalGlucose, 140) : finalGlucose,
       restingHR: activityLevel === 2 ? 62 : activityLevel === 1 ? 72 : 82,
       smoking,
       physicalActivity: activityLevel,
@@ -145,7 +263,6 @@ export default function CommonManView({
   const currentRisk = predictionResult?.overallRisk ?? 18;
   
   // Calculate estimated Heart Age
-  // Base formula: Chronological age adjusted by risk delta
   const calculateHeartAge = () => {
     let delta = 0;
     if (currentRisk > 50) delta += 10;
@@ -233,24 +350,11 @@ export default function CommonManView({
 
   const riskDetails = getRiskDetails(currentRisk);
 
-  // Multi-lingual spoken summary text (English, Kannada, Hindi)
-  const getVoiceText = () => {
-    if (language === "kn") {
-      return `ನಮಸ್ಕಾರ! ಇದು ನಿಮ್ಮ ವೈಯಕ್ತಿಕಗೊಳಿಸಿದ ಹೃದಯ ಆರೋಗ್ಯ ತಪಾಸಣೆ. ನಿಮ್ಮ ಪ್ರಸ್ತುತ ಹೃದಯ ಅಪಾಯದ ಸ್ಕೋರ್ ಶೇಕಡಾ ${currentRisk} ಆಗಿದೆ. ನಿಮ್ಮ ಪ್ರಸ್ತುತ ಜೀವನಶೈಲಿಯ ಆಧಾರದ ಮೇಲೆ, ನಿಮ್ಮ ಅಂದಾಜು ಹೃದಯದ ವಯಸ್ಸು ${heartAge} ವರ್ಷಗಳು, ಮತ್ತು ನಿಮ್ಮ ನಿಜವಾದ ವಯಸ್ಸು ${age} ವರ್ಷಗಳು. ${riskDetails.headline} ${smoking ? "ಧೂಮಪಾನ ತ್ಯಜಿಸುವುದು ನಿಮ್ಮ ಹೃದಯಕ್ಕೆ ನೀವು ನೀಡಬಹುದಾದ ಅತ್ಯುತ್ತಮ ಕೊಡುಗೆಯಾಗಿದೆ." : ""} ಪ್ರತಿದಿನ 30 ನಿಮಿಷ ನಡೆಯುವುದು ಮತ್ತು ಉಪ್ಪಿನ ಪ್ರಮಾಣ ಕಡಿಮೆ ಮಾಡುವುದು ನಿಮ್ಮ ಹೃದಯದ ಅಪಾಯವನ್ನು ಕಡಿಮೆ ಮಾಡುತ್ತದೆ. ನಿಯಮಿತ ತಪಾಸಣೆಗಾಗಿ ದಯವಿಟ್ಟು ನಿಮ್ಮ ವೈದ್ಯರನ್ನು ಸಂಪರ್ಕಿಸಿ.`;
-    }
-    if (language === "hi") {
-      return `नमस्ते! यह आपकी व्यक्तिगत हृदय स्वास्थ्य रिपोर्ट है। आपका वर्तमान हृदय जोखिम स्कोर ${currentRisk} प्रतिशत है। आपकी वर्तमान आदतों के अनुसार, आपकी अनुमानित हृदय आयु ${heartAge} वर्ष है, जबकि आपकी वास्तविक आयु ${age} वर्ष है। ${riskDetails.headline} ${smoking ? "धूम्रपान छोड़ना आपके दिल के लिए सबसे बड़ा उपहार होगा।" : ""} रोजाना 30 मिनट टहलने और कम नमक खाने से आपका दिल लंबे समय तक सुरक्षित रहेगा। नियमित जांच के लिए कृपया अपने डॉक्टर से परामर्श लें।`;
-    }
-    return `Hello! Here is your personalized heart health check. Your current cardiovascular risk score is ${currentRisk} percent, which falls into the ${riskDetails.level} category. Based on your current habits, your estimated Heart Age is ${heartAge} years, compared to your actual age of ${age} years. ${riskDetails.headline} Key tips for you: ${smoking ? "Quitting smoking is the single biggest gift you can give your heart." : ""} Walking thirty minutes a day and cutting back on salty foods can reduce your risk significantly. Please consult your family doctor for routine checkups.`;
-  };
-
-  const plainEnglishVoiceText = getVoiceText();
-
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
       
       {/* Mode Banner & Welcome Header */}
-      <div className="bg-gradient-to-r from-rose-500 via-rose-600 to-indigo-600 rounded-3xl p-6 sm:p-10 text-white shadow-xl relative overflow-hidden">
+      <div className="bg-gradient-to-r from-rose-500 via-rose-600 to-indigo-600 rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden">
         <div className="absolute right-0 top-0 w-96 h-96 bg-white/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
         
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
@@ -259,8 +363,8 @@ export default function CommonManView({
               <Sparkles className="w-3.5 h-3.5" />
               {t.commonManBadge}
             </div>
-            <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-white">
-              {t.commonManTitle}
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+              {citizenName ? `${citizenName}'s Heart Health Check` : t.commonManTitle}
             </h1>
             <p className="text-rose-100 text-sm sm:text-base font-medium leading-relaxed">
               {t.commonManSubtitle}
@@ -301,18 +405,12 @@ export default function CommonManView({
             {/* Switch to Doctor / Specialist Mode button */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <button
+                id="btn-switch-specialist-mode"
                 onClick={onSwitchToSpecialistMode}
-                className="px-5 py-3 bg-white text-slate-900 hover:bg-slate-50 font-extrabold rounded-2xl text-xs uppercase tracking-wider shadow-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 cursor-pointer"
+                className="px-5 py-2.5 bg-white text-slate-900 hover:bg-slate-50 font-extrabold rounded-2xl text-xs uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
               >
                 <Stethoscope className="w-4 h-4 text-rose-600" />
                 <span>{t.switchToDoctor}</span>
-              </button>
-              <button
-                onClick={onOpenAiChat}
-                className="px-5 py-3 bg-white/15 hover:bg-white/25 border border-white/30 text-white font-extrabold rounded-2xl text-xs uppercase tracking-wider backdrop-blur-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <MessageSquare className="w-4 h-4" />
-                <span>{t.askHeartAi}</span>
               </button>
             </div>
           </div>
@@ -324,7 +422,7 @@ export default function CommonManView({
         
         {/* Left Column: Easy Question Wizard (5 Cols) */}
         <div className="lg:col-span-5 space-y-6">
-          <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-md space-y-6">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-5">
             
             <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-4 gap-3">
               <div className="flex items-center gap-2.5">
@@ -338,30 +436,10 @@ export default function CommonManView({
               </div>
               
               <div className="flex items-center gap-1.5 self-start sm:self-auto">
-                {/* Language switcher mini */}
-                {onLanguageChange && (
-                  <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
-                    {LANGUAGES.map((lang) => (
-                      <button
-                        key={lang.code}
-                        type="button"
-                        onClick={() => onLanguageChange(lang.code)}
-                        className={`px-2 py-0.5 rounded-md text-[10px] font-black transition-all cursor-pointer ${
-                          language === lang.code
-                            ? "bg-white text-indigo-700 shadow-xs border border-slate-200"
-                            : "text-slate-500 hover:text-slate-800"
-                        }`}
-                        title={lang.label}
-                      >
-                        {lang.nativeLabel}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
                 {/* Unit Toggle */}
                 <button
                   type="button"
+                  id="btn-unit-toggle"
                   onClick={() => setUseImperial(!useImperial)}
                   className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg transition-all cursor-pointer"
                 >
@@ -370,28 +448,126 @@ export default function CommonManView({
               </div>
             </div>
 
-            <div className="space-y-5">
+            {/* Quick Profile Presets Bar for Instant Ease of Access */}
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                {t.quickPresetsTitle || "Quick Presets"}
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                <button
+                  type="button"
+                  id="preset-young"
+                  onClick={() => applyPresetProfile("young")}
+                  className="px-2.5 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-center transition-all cursor-pointer text-slate-700 hover:border-slate-300"
+                >
+                  <span className="block text-xs font-bold leading-tight">🏃 28y Active</span>
+                </button>
+                <button
+                  type="button"
+                  id="preset-middle"
+                  onClick={() => applyPresetProfile("middle")}
+                  className="px-2.5 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-center transition-all cursor-pointer text-slate-700 hover:border-slate-300"
+                >
+                  <span className="block text-xs font-bold leading-tight">👔 48y Routine</span>
+                </button>
+                <button
+                  type="button"
+                  id="preset-senior"
+                  onClick={() => applyPresetProfile("senior")}
+                  className="px-2.5 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-center transition-all cursor-pointer text-slate-700 hover:border-slate-300"
+                >
+                  <span className="block text-xs font-bold leading-tight">👴 68y Senior</span>
+                </button>
+                <button
+                  type="button"
+                  id="preset-reset"
+                  onClick={() => applyPresetProfile("reset")}
+                  className="px-2.5 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-center transition-all cursor-pointer text-slate-500 hover:text-slate-700"
+                >
+                  <span className="block text-xs font-bold leading-tight">🔄 Reset</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Lab Report / Blood Test Scanner Callout */}
+            <div className="p-3.5 rounded-2xl bg-gradient-to-r from-rose-950 via-slate-900 to-indigo-950 text-white shadow-sm relative overflow-hidden border border-rose-500/30">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-rose-500/30 border border-rose-400/40 flex items-center justify-center shrink-0">
+                    <FileCheck className="w-4 h-4 text-rose-300" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-white">Have a Lab Report / Blood Test?</h4>
+                    <p className="text-[10px] text-slate-300">Scan PDF or photo to auto-fill</p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  id="btn-scan-report-citizen"
+                  onClick={() => setIsLabScannerOpen(true)}
+                  className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shrink-0"
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                  <span>Scan</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-4">
               
+              {/* Citizen Name Field */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                  <span>{t.citizenNameLabel || "Full Name (Citizen / Patient)"}</span>
+                  <span className="text-[10px] text-slate-400 font-normal">Optional</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="input-citizen-name"
+                    placeholder={t.citizenNamePlaceholder || "e.g. Ramesh Patel / Sarah Jenkins"}
+                    value={citizenName}
+                    onChange={(e) => setCitizenName(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all outline-none"
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <User className="w-4 h-4" />
+                  </div>
+                </div>
+              </div>
+
               {/* Question 1: Age & Sex */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
-                    <span>{t.qAge}</span>
-                    <span className="text-rose-600 font-extrabold">{age} {t.yearsOld}</span>
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-700">{t.qAge}</label>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setAge(prev => Math.max(18, prev - 1))}
+                        className="w-5 h-5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold flex items-center justify-center text-xs"
+                      >
+                        -
+                      </button>
+                      <span className="text-xs font-extrabold text-rose-600 px-1">{age}y</span>
+                      <button
+                        type="button"
+                        onClick={() => setAge(prev => Math.min(95, prev + 1))}
+                        className="w-5 h-5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold flex items-center justify-center text-xs"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
                   <input
                     type="range"
-                    min="20"
-                    max="90"
+                    min="18"
+                    max="95"
                     value={age}
                     onChange={(e) => setAge(parseInt(e.target.value))}
                     className="w-full accent-rose-600 cursor-pointer"
                   />
-                  <div className="flex justify-between text-[10px] text-slate-400 font-semibold">
-                    <span>20</span>
-                    <span>50</span>
-                    <span>90</span>
-                  </div>
                 </div>
 
                 <div className="space-y-1.5">
@@ -399,6 +575,7 @@ export default function CommonManView({
                   <div className="grid grid-cols-2 gap-1.5">
                     <button
                       type="button"
+                      id="btn-sex-male"
                       onClick={() => setSex("male")}
                       className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                         sex === "male" 
@@ -410,10 +587,11 @@ export default function CommonManView({
                     </button>
                     <button
                       type="button"
+                      id="btn-sex-female"
                       onClick={() => setSex("female")}
                       className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                         sex === "female" 
-                          ? "bg-rose-500 text-white shadow-sm" 
+                          ? "bg-rose-600 text-white shadow-sm" 
                           : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                       }`}
                     >
@@ -464,7 +642,10 @@ export default function CommonManView({
                 ) : (
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <span className="text-[10px] text-slate-400 font-bold block">{t.height}: {heightCm} cm</span>
+                      <div className="flex justify-between text-[11px] font-bold text-slate-600">
+                        <span>{t.height}:</span>
+                        <span className="text-indigo-600">{heightCm} cm</span>
+                      </div>
                       <input
                         type="range"
                         min="130"
@@ -475,7 +656,10 @@ export default function CommonManView({
                       />
                     </div>
                     <div className="space-y-1">
-                      <span className="text-[10px] text-slate-400 font-bold block">{t.weight}: {weightKg} kg</span>
+                      <div className="flex justify-between text-[11px] font-bold text-slate-600">
+                        <span>{t.weight}:</span>
+                        <span className="text-indigo-600">{weightKg} kg</span>
+                      </div>
                       <input
                         type="range"
                         min="40"
@@ -501,49 +685,63 @@ export default function CommonManView({
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-slate-700 block">{t.qBp}</label>
-                  <span className="text-[10px] text-slate-400">e.g. 120/80</span>
+                  <span className="text-[10px] text-slate-400 font-medium">Top / Bottom pressure</span>
                 </div>
 
-                <div className="grid grid-cols-3 gap-1.5 text-center">
+                <div className="grid grid-cols-4 gap-1 text-center">
                   <button
                     type="button"
-                    onClick={() => setBpKnown("normal")}
-                    className={`p-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                    onClick={() => { setBpKnown("normal"); setSystolicBP(118); setDiastolicBP(76); }}
+                    className={`p-2 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
                       bpKnown === "normal" 
                         ? "bg-emerald-50 border-emerald-500 text-emerald-800 shadow-xs" 
                         : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
                     }`}
                   >
-                    {t.bpNormal}
+                    120/80 (Normal)
                   </button>
                   <button
                     type="button"
-                    onClick={() => setBpKnown("high")}
-                    className={`p-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
-                      bpKnown === "high" 
+                    onClick={() => { setBpKnown("stage1"); setSystolicBP(135); setDiastolicBP(86); }}
+                    className={`p-2 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
+                      bpKnown === "stage1" 
+                        ? "bg-amber-50 border-amber-500 text-amber-800 shadow-xs" 
+                        : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
+                    }`}
+                  >
+                    135/85 (Elevated)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setBpKnown("stage2"); setSystolicBP(152); setDiastolicBP(94); }}
+                    className={`p-2 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
+                      bpKnown === "stage2" 
                         ? "bg-rose-50 border-rose-500 text-rose-800 shadow-xs" 
                         : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
                     }`}
                   >
-                    {t.bpHigh}
+                    150+ (High)
                   </button>
                   <button
                     type="button"
                     onClick={() => setBpKnown("known")}
-                    className={`p-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                    className={`p-2 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
                       bpKnown === "known" 
                         ? "bg-indigo-50 border-indigo-500 text-indigo-800 shadow-xs" 
                         : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
                     }`}
                   >
-                    {t.bpExact}
+                    Custom
                   </button>
                 </div>
 
                 {bpKnown === "known" && (
                   <div className="grid grid-cols-2 gap-3 pt-1">
                     <div>
-                      <span className="text-[10px] text-slate-500 font-bold block mb-1">{t.bpTop}: {systolicBP}</span>
+                      <div className="flex justify-between text-[10px] text-slate-600 font-bold mb-1">
+                        <span>{t.bpTop}:</span>
+                        <span className="text-rose-600">{systolicBP} mmHg</span>
+                      </div>
                       <input
                         type="range"
                         min="90"
@@ -554,7 +752,10 @@ export default function CommonManView({
                       />
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-500 font-bold block mb-1">{t.bpBottom}: {diastolicBP}</span>
+                      <div className="flex justify-between text-[10px] text-slate-600 font-bold mb-1">
+                        <span>{t.bpBottom}:</span>
+                        <span className="text-rose-600">{diastolicBP} mmHg</span>
+                      </div>
                       <input
                         type="range"
                         min="50"
@@ -568,7 +769,79 @@ export default function CommonManView({
                 )}
               </div>
 
-              {/* Question 4: Smoking & Exercise */}
+              {/* Question 4: Cholesterol */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-700 block">Total Cholesterol</label>
+                  <span className="text-[10px] text-slate-400 font-medium">Blood fat level</span>
+                </div>
+
+                <div className="grid grid-cols-4 gap-1 text-center">
+                  <button
+                    type="button"
+                    onClick={() => { setCholKnown("normal"); setCholesterol(175); }}
+                    className={`p-2 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
+                      cholKnown === "normal" 
+                        ? "bg-emerald-50 border-emerald-500 text-emerald-800 shadow-xs" 
+                        : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
+                    }`}
+                  >
+                    &lt; 200 (Good)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setCholKnown("borderline"); setCholesterol(215); }}
+                    className={`p-2 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
+                      cholKnown === "borderline" 
+                        ? "bg-amber-50 border-amber-500 text-amber-800 shadow-xs" 
+                        : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
+                    }`}
+                  >
+                    200-239
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setCholKnown("high"); setCholesterol(250); }}
+                    className={`p-2 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
+                      cholKnown === "high" 
+                        ? "bg-rose-50 border-rose-500 text-rose-800 shadow-xs" 
+                        : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
+                    }`}
+                  >
+                    240+ (High)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCholKnown("known")}
+                    className={`p-2 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
+                      cholKnown === "known" 
+                        ? "bg-indigo-50 border-indigo-500 text-indigo-800 shadow-xs" 
+                        : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
+                    }`}
+                  >
+                    Custom
+                  </button>
+                </div>
+
+                {cholKnown === "known" && (
+                  <div className="pt-1">
+                    <div className="flex justify-between text-[10px] text-slate-600 font-bold mb-1">
+                      <span>Total Cholesterol:</span>
+                      <span className="text-amber-600">{cholesterol} mg/dL</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="120"
+                      max="350"
+                      value={cholesterol}
+                      onChange={(e) => setCholesterol(parseInt(e.target.value))}
+                      className="w-full accent-amber-600 cursor-pointer"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Question 5: Smoking & Exercise */}
               <div className="space-y-3 pt-1">
                 <label className="text-xs font-bold text-slate-700 block">{t.qHabits}</label>
                 
@@ -638,7 +911,7 @@ export default function CommonManView({
                 </div>
               </div>
 
-              {/* Question 5: Health Background Checkboxes */}
+              {/* Question 6: Health Background Checkboxes */}
               <div className="space-y-2 pt-1">
                 <label className="text-xs font-bold text-slate-700 block">{t.qMedical}</label>
                 <div className="space-y-1.5">
@@ -677,18 +950,19 @@ export default function CommonManView({
               {/* Main Submit Action */}
               <button
                 type="button"
+                id="btn-calculate-citizen-risk"
                 onClick={handleCheckMyHeart}
                 disabled={isLoading}
-                className="w-full py-4 bg-rose-600 hover:bg-rose-700 text-white font-extrabold rounded-2xl text-sm uppercase tracking-wider shadow-lg shadow-rose-200 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 disabled:opacity-50"
+                className="w-full py-3.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold rounded-2xl text-xs uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 disabled:opacity-50"
               >
                 {isLoading ? (
                   <>
-                    <Activity className="w-5 h-5 animate-spin" />
+                    <Activity className="w-4 h-4 animate-spin" />
                     <span>{t.btnCalculating}</span>
                   </>
                 ) : (
                   <>
-                    <Heart className="w-5 h-5 fill-current" />
+                    <Heart className="w-4 h-4 fill-current" />
                     <span>{t.btnCheckHeart}</span>
                   </>
                 )}
@@ -698,14 +972,15 @@ export default function CommonManView({
           </div>
         </div>
 
-        {/* Right Column: Everyday Citizen Report, Heart Age & Action Plan (7 Cols) */}
+        {/* Right Column: Everyday Citizen Report, Heart Age, Action Plan & Pathology Guide (7 Cols) */}
         <div className="lg:col-span-7 space-y-6">
           
           {/* Sub-Navigation Tabs */}
           <div className="flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 overflow-x-auto">
             <button
+              id="subtab-heart-score"
               onClick={() => setActiveSubTab("report")}
-              className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                 activeSubTab === "report" 
                   ? "bg-white text-slate-900 shadow-sm" 
                   : "text-slate-600 hover:text-slate-900"
@@ -715,8 +990,21 @@ export default function CommonManView({
               <span>{t.tabHeartScore}</span>
             </button>
             <button
+              id="subtab-pathology-guide"
+              onClick={() => setActiveSubTab("pathology_guide")}
+              className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                activeSubTab === "pathology_guide" 
+                  ? "bg-white text-slate-900 shadow-sm" 
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Pathology Guide</span>
+            </button>
+            <button
+              id="subtab-action-plan"
               onClick={() => setActiveSubTab("action_plan")}
-              className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                 activeSubTab === "action_plan" 
                   ? "bg-white text-slate-900 shadow-sm" 
                   : "text-slate-600 hover:text-slate-900"
@@ -726,8 +1014,9 @@ export default function CommonManView({
               <span>{t.tabActionPlan}</span>
             </button>
             <button
+              id="subtab-doctor-questions"
               onClick={() => setActiveSubTab("doctor_questions")}
-              className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                 activeSubTab === "doctor_questions" 
                   ? "bg-white text-slate-900 shadow-sm" 
                   : "text-slate-600 hover:text-slate-900"
@@ -737,8 +1026,9 @@ export default function CommonManView({
               <span>{t.tabDoctorQuestions}</span>
             </button>
             <button
+              id="subtab-faq-myths"
               onClick={() => setActiveSubTab("faq_myths")}
-              className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                 activeSubTab === "faq_myths" 
                   ? "bg-white text-slate-900 shadow-sm" 
                   : "text-slate-600 hover:text-slate-900"
@@ -754,7 +1044,7 @@ export default function CommonManView({
             <div className="space-y-6">
               
               {/* Primary Score & Traffic Light Card */}
-              <div className={`p-6 sm:p-8 rounded-3xl border ${riskDetails.borderColor} ${riskDetails.bgLight} space-y-6 shadow-sm`}>
+              <div className={`p-6 sm:p-7 rounded-3xl border ${riskDetails.borderColor} ${riskDetails.bgLight} space-y-5 shadow-sm`}>
                 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div>
@@ -762,7 +1052,7 @@ export default function CommonManView({
                       {riskDetails.level}
                     </span>
                     <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-2">
-                      {riskDetails.headline}
+                      {citizenName ? `${citizenName}'s ${riskDetails.headline}` : riskDetails.headline}
                     </h2>
                   </div>
 
@@ -774,7 +1064,7 @@ export default function CommonManView({
 
                 {/* Visual Traffic Light Bar */}
                 <div className="space-y-1.5">
-                  <div className="h-4 w-full bg-slate-200 rounded-full overflow-hidden flex relative">
+                  <div className="h-3.5 w-full bg-slate-200 rounded-full overflow-hidden flex relative">
                     <div className="w-[20%] bg-emerald-400 h-full" title="Low Risk Zone (0-20%)" />
                     <div className="w-[30%] bg-amber-400 h-full" title="Moderate Risk Zone (20-50%)" />
                     <div className="w-[50%] bg-rose-500 h-full" title="Elevated Risk Zone (50-100%)" />
@@ -798,7 +1088,7 @@ export default function CommonManView({
               </div>
 
               {/* Heart Age Comparison Block */}
-              <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-md space-y-4">
+              <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
                 <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
                   <div className="p-2 bg-indigo-50 text-indigo-700 rounded-xl">
                     <Clock className="w-5 h-5" />
@@ -836,7 +1126,7 @@ export default function CommonManView({
               </div>
 
               {/* Interactive "What Happens If I Change..." Simulation for Everyday Citizens */}
-              <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-md space-y-4">
+              <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <div className="flex items-center gap-2.5">
                     <div className="p-2 bg-teal-50 text-teal-700 rounded-xl">
@@ -849,157 +1139,257 @@ export default function CommonManView({
                   </div>
 
                   {riskReduction > 0 && (
-                    <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-extrabold rounded-full">
-                      -{riskReduction}% {t.potentialDrop}
+                    <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-black rounded-full">
+                      -{riskReduction}% Risk Drop
                     </span>
                   )}
                 </div>
 
-                <div className="space-y-2.5">
-                  <label className={`flex items-center justify-between p-3 rounded-2xl border transition-all cursor-pointer ${
-                    simWalkingGoal ? "bg-teal-50/80 border-teal-300 text-teal-900" : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
-                  }`}>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={simWalkingGoal}
-                        onChange={(e) => setSimWalkingGoal(e.target.checked)}
-                        className="w-4 h-4 text-teal-600 rounded accent-teal-600"
-                      />
-                      <div>
-                        <span className="text-xs font-extrabold block">{t.simWalk}</span>
-                        <span className="text-[10px] text-slate-400 font-normal">{t.simWalkSub}</span>
-                      </div>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSimWalkingGoal(!simWalkingGoal)}
+                    className={`p-3 rounded-2xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                      simWalkingGoal ? "bg-teal-50 border-teal-500 shadow-xs" : "bg-slate-50 border-slate-200 hover:bg-slate-100"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Footprints className="w-4 h-4 text-teal-600" />
+                      <span className="text-xs font-bold text-slate-700">{t.simWalk}</span>
                     </div>
-                    <span className="text-xs font-bold text-teal-700">-18%</span>
-                  </label>
+                    {simWalkingGoal && <CheckCircle2 className="w-4 h-4 text-teal-600" />}
+                  </button>
 
-                  {smoking && (
-                    <label className={`flex items-center justify-between p-3 rounded-2xl border transition-all cursor-pointer ${
-                      simQuitSmoking ? "bg-emerald-50/80 border-emerald-300 text-emerald-900" : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
-                    }`}>
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="checkbox"
-                          checked={simQuitSmoking}
-                          onChange={(e) => setSimQuitSmoking(e.target.checked)}
-                          className="w-4 h-4 text-emerald-600 rounded accent-emerald-600"
-                        />
-                        <div>
-                          <span className="text-xs font-extrabold block">{t.simQuitSmoke}</span>
-                          <span className="text-[10px] text-slate-400 font-normal">{t.simQuitSmokeSub}</span>
-                        </div>
-                      </div>
-                      <span className="text-xs font-bold text-emerald-700">-25%</span>
-                    </label>
-                  )}
-
-                  <label className={`flex items-center justify-between p-3 rounded-2xl border transition-all cursor-pointer ${
-                    simHealthyDiet ? "bg-indigo-50/80 border-indigo-300 text-indigo-900" : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
-                  }`}>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={simHealthyDiet}
-                        onChange={(e) => setSimHealthyDiet(e.target.checked)}
-                        className="w-4 h-4 text-indigo-600 rounded accent-indigo-600"
-                      />
-                      <div>
-                        <span className="text-xs font-extrabold block">{t.simDiet}</span>
-                        <span className="text-[10px] text-slate-400 font-normal">{t.simDietSub}</span>
-                      </div>
+                  <button
+                    type="button"
+                    onClick={() => setSimQuitSmoking(!simQuitSmoking)}
+                    className={`p-3 rounded-2xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                      simQuitSmoking ? "bg-emerald-50 border-emerald-500 shadow-xs" : "bg-slate-50 border-slate-200 hover:bg-slate-100"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Shield className="w-4 h-4 text-emerald-600" />
+                      <span className="text-xs font-bold text-slate-700">{t.simQuitSmoke}</span>
                     </div>
-                    <span className="text-xs font-bold text-indigo-700">-12%</span>
-                  </label>
+                    {simQuitSmoking && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSimHealthyDiet(!simHealthyDiet)}
+                    className={`p-3 rounded-2xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                      simHealthyDiet ? "bg-amber-50 border-amber-500 shadow-xs" : "bg-slate-50 border-slate-200 hover:bg-slate-100"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Apple className="w-4 h-4 text-amber-600" />
+                      <span className="text-xs font-bold text-slate-700">{t.simDiet}</span>
+                    </div>
+                    {simHealthyDiet && <CheckCircle2 className="w-4 h-4 text-amber-600" />}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSimBPMeds(!simBPMeds)}
+                    className={`p-3 rounded-2xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                      simBPMeds ? "bg-indigo-50 border-indigo-500 shadow-xs" : "bg-slate-50 border-slate-200 hover:bg-slate-100"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Activity className="w-4 h-4 text-indigo-600" />
+                      <span className="text-xs font-bold text-slate-700">{t.medBp}</span>
+                    </div>
+                    {simBPMeds && <CheckCircle2 className="w-4 h-4 text-indigo-600" />}
+                  </button>
                 </div>
 
-                {/* Projected Result */}
-                <div className="p-4 bg-slate-900 text-white rounded-2xl flex items-center justify-between">
+                <div className="p-4 bg-slate-900 text-white rounded-2xl flex items-center justify-between gap-4">
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">{t.projectedRisk}</span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Predicted Improved Risk</span>
                     <span className="text-2xl font-black text-emerald-400">{simulatedRisk}%</span>
                   </div>
                   <div className="text-right">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">{t.lifeBenefit}</span>
-                    <span className="text-xs font-bold text-slate-200">
-                      {riskReduction > 0 ? t.bringsAgeDown.replace("{age}", String(Math.max(18, heartAge - 4))) : (language === "kn" ? "ಮೇಲಿನ ಆಯ್ಕೆಗಳನ್ನು ಆರಿಸಿ" : language === "hi" ? "ऊपर दिए गए विकल्प चुनें" : "Toggle options above")}
+                    <span className="text-xs font-extrabold text-emerald-300 block">
+                      {riskReduction > 0 ? `You save ${riskReduction}% of your cardiac risk!` : "Toggle habits above to see improvement"}
+                    </span>
+                    <span className="text-[10px] text-slate-400">Small daily habits yield profound long-term protection</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          )}
+
+          {/* TAB 2: Pathology & Body Metrics Explained (Simple Terminology) */}
+          {activeSubTab === "pathology_guide" && (
+            <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6">
+              <div className="border-b border-slate-100 pb-4">
+                <div className="flex items-center gap-2 text-indigo-600 mb-1">
+                  <BookOpen className="w-5 h-5" />
+                  <h3 className="font-extrabold text-slate-900 text-lg">Pathology & Body Metrics Explained</h3>
+                </div>
+                <p className="text-slate-500 text-xs font-normal">
+                  Simple, jargon-free explanations of your laboratory test numbers and what they mean for your heart.
+                </p>
+              </div>
+
+              <div className="grid gap-4">
+                
+                {/* 1. Blood Pressure */}
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="p-1.5 bg-rose-100 text-rose-700 rounded-lg text-xs font-black">🩸</span>
+                      <h4 className="font-extrabold text-slate-800 text-sm">Blood Pressure (Systolic & Diastolic)</h4>
+                    </div>
+                    <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-black rounded-full">
+                      Target: &lt; 120/80 mmHg
                     </span>
                   </div>
-                </div>
-              </div>
-
-              {/* Spoken Narration for Common Man */}
-              <VoiceAssistant
-                title={t.voiceTitle}
-                subtitle={t.voiceSubtitle}
-                textToSpeak={plainEnglishVoiceText}
-                language={language}
-              />
-
-            </div>
-          )}
-
-          {/* TAB 2: 3-Step Everyday Heart Action Plan */}
-          {activeSubTab === "action_plan" && (
-            <div className="space-y-4">
-              <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-md space-y-6">
-                <div className="border-b border-slate-100 pb-4">
-                  <h3 className="font-extrabold text-slate-900 text-lg">{t.actionPlanTitle}</h3>
-                  <p className="text-slate-500 text-xs font-normal">{t.actionPlanSubtitle}</p>
-                </div>
-
-                <div className="space-y-4">
-                  {/* Step 1 */}
-                  <div className="p-5 bg-emerald-50/70 border border-emerald-200 rounded-2xl space-y-2">
-                    <div className="flex items-center gap-2.5">
-                      <div className="p-2 bg-emerald-500 text-white rounded-xl text-xs font-black">1</div>
-                      <h4 className="font-extrabold text-slate-900 text-sm">{t.step1Title}</h4>
-                    </div>
-                    <p className="text-slate-600 text-xs font-normal leading-relaxed pl-9">
-                      {t.step1Desc}
-                    </p>
-                  </div>
-
-                  {/* Step 2 */}
-                  <div className="p-5 bg-teal-50/70 border border-teal-200 rounded-2xl space-y-2">
-                    <div className="flex items-center gap-2.5">
-                      <div className="p-2 bg-teal-600 text-white rounded-xl text-xs font-black">2</div>
-                      <h4 className="font-extrabold text-slate-900 text-sm">{t.step2Title}</h4>
-                    </div>
-                    <p className="text-slate-600 text-xs font-normal leading-relaxed pl-9">
-                      {t.step2Desc}
-                    </p>
-                  </div>
-
-                  {/* Step 3 */}
-                  <div className="p-5 bg-indigo-50/70 border border-indigo-200 rounded-2xl space-y-2">
-                    <div className="flex items-center gap-2.5">
-                      <div className="p-2 bg-indigo-600 text-white rounded-xl text-xs font-black">3</div>
-                      <h4 className="font-extrabold text-slate-900 text-sm">{t.step3Title}</h4>
-                    </div>
-                    <p className="text-slate-600 text-xs font-normal leading-relaxed pl-9">
-                      {t.step3Desc}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Emergency Red Flags Box */}
-                <div className="p-5 bg-rose-50 border border-rose-200 rounded-2xl space-y-2">
-                  <div className="flex items-center gap-2 text-rose-700 font-extrabold text-xs uppercase tracking-wider">
-                    <AlertTriangle className="w-4 h-4" />
-                    {t.emergencyAlertTitle}
-                  </div>
-                  <p className="text-slate-700 text-xs font-normal leading-relaxed">
-                    {t.emergencyAlertDesc}
+                  <p className="text-slate-600 text-xs leading-relaxed">
+                    <strong>What it is:</strong> The force of blood pushing against the walls of your arteries.
+                    <br />
+                    • <strong>Top Number (Systolic):</strong> Pressure when your heart squeezes and pumps blood out.
+                    <br />
+                    • <strong>Bottom Number (Diastolic):</strong> Pressure inside arteries when your heart relaxes between beats.
                   </p>
+                  <div className="grid grid-cols-3 gap-2 pt-1 text-center text-[10px] font-bold">
+                    <div className="p-2 bg-emerald-50 text-emerald-800 rounded-xl border border-emerald-200">
+                      🟢 120/80 (Healthy)
+                    </div>
+                    <div className="p-2 bg-amber-50 text-amber-800 rounded-xl border border-amber-200">
+                      🟡 130-139 (Elevated)
+                    </div>
+                    <div className="p-2 bg-rose-50 text-rose-800 rounded-xl border border-rose-200">
+                      🔴 140+ (High / Strained)
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Cholesterol */}
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="p-1.5 bg-amber-100 text-amber-700 rounded-lg text-xs font-black">🧈</span>
+                      <h4 className="font-extrabold text-slate-800 text-sm">Total Cholesterol (Blood Fats)</h4>
+                    </div>
+                    <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-black rounded-full">
+                      Target: &lt; 200 mg/dL
+                    </span>
+                  </div>
+                  <p className="text-slate-600 text-xs leading-relaxed">
+                    <strong>What it is:</strong> A waxy, fat-like substance found in your blood cells. When levels are too high, excess cholesterol sticks to the artery walls, creating plaque deposits that narrow blood flow to the heart muscle.
+                  </p>
+                  <div className="grid grid-cols-3 gap-2 pt-1 text-center text-[10px] font-bold">
+                    <div className="p-2 bg-emerald-50 text-emerald-800 rounded-xl border border-emerald-200">
+                      🟢 &lt; 200 mg/dL (Optimal)
+                    </div>
+                    <div className="p-2 bg-amber-50 text-amber-800 rounded-xl border border-amber-200">
+                      🟡 200-239 (Borderline)
+                    </div>
+                    <div className="p-2 bg-rose-50 text-rose-800 rounded-xl border border-rose-200">
+                      🔴 240+ (Elevated)
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Fasting Glucose */}
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="p-1.5 bg-teal-100 text-teal-700 rounded-lg text-xs font-black">🍬</span>
+                      <h4 className="font-extrabold text-slate-800 text-sm">Fasting Blood Sugar (Glucose)</h4>
+                    </div>
+                    <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-black rounded-full">
+                      Target: 70-99 mg/dL
+                    </span>
+                  </div>
+                  <p className="text-slate-600 text-xs leading-relaxed">
+                    <strong>What it is:</strong> The amount of sugar circulating in your blood after not eating overnight. High sugar levels can damage blood vessel lining and stiffen arteries, doubling cardiac risk.
+                  </p>
+                  <div className="grid grid-cols-3 gap-2 pt-1 text-center text-[10px] font-bold">
+                    <div className="p-2 bg-emerald-50 text-emerald-800 rounded-xl border border-emerald-200">
+                      🟢 70-99 mg/dL (Normal)
+                    </div>
+                    <div className="p-2 bg-amber-50 text-amber-800 rounded-xl border border-amber-200">
+                      🟡 100-125 (Pre-diabetes)
+                    </div>
+                    <div className="p-2 bg-rose-50 text-rose-800 rounded-xl border border-rose-200">
+                      🔴 126+ (High Blood Sugar)
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. Body Mass Index (BMI) */}
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="p-1.5 bg-indigo-100 text-indigo-700 rounded-lg text-xs font-black">⚖️</span>
+                      <h4 className="font-extrabold text-slate-800 text-sm">Body Mass Index (BMI)</h4>
+                    </div>
+                    <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-black rounded-full">
+                      Target: 18.5 - 24.9
+                    </span>
+                  </div>
+                  <p className="text-slate-600 text-xs leading-relaxed">
+                    <strong>What it is:</strong> A simple ratio of your body weight to height. Carrying excess weight increases the mechanical workload on your heart to circulate oxygen-rich blood.
+                  </p>
+                  <div className="grid grid-cols-3 gap-2 pt-1 text-center text-[10px] font-bold">
+                    <div className="p-2 bg-emerald-50 text-emerald-800 rounded-xl border border-emerald-200">
+                      🟢 18.5 - 24.9 (Healthy)
+                    </div>
+                    <div className="p-2 bg-amber-50 text-amber-800 rounded-xl border border-amber-200">
+                      🟡 25.0 - 29.9 (Overweight)
+                    </div>
+                    <div className="p-2 bg-rose-50 text-rose-800 rounded-xl border border-rose-200">
+                      🔴 30.0+ (Higher Workload)
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: Personalized Action Plan */}
+          {activeSubTab === "action_plan" && (
+            <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6">
+              <div className="border-b border-slate-100 pb-4">
+                <h3 className="font-extrabold text-slate-900 text-lg">{t.actionPlanTitle}</h3>
+                <p className="text-slate-500 text-xs font-normal">{t.actionPlanSubtitle}</p>
+              </div>
+
+              <div className="grid sm:grid-cols-3 gap-4">
+                <div className="p-4 bg-emerald-50/70 border border-emerald-200 rounded-2xl space-y-2">
+                  <div className="flex items-center gap-2 text-emerald-800 font-extrabold text-xs">
+                    <Footprints className="w-4 h-4" />
+                    <span>{t.step1Title}</span>
+                  </div>
+                  <p className="text-slate-600 text-xs font-normal leading-relaxed">{t.step1Desc}</p>
+                </div>
+
+                <div className="p-4 bg-amber-50/70 border border-amber-200 rounded-2xl space-y-2">
+                  <div className="flex items-center gap-2 text-amber-800 font-extrabold text-xs">
+                    <Apple className="w-4 h-4" />
+                    <span>{t.step2Title}</span>
+                  </div>
+                  <p className="text-slate-600 text-xs font-normal leading-relaxed">{t.step2Desc}</p>
+                </div>
+
+                <div className="p-4 bg-indigo-50/70 border border-indigo-200 rounded-2xl space-y-2">
+                  <div className="flex items-center gap-2 text-indigo-800 font-extrabold text-xs">
+                    <Shield className="w-4 h-4" />
+                    <span>{t.step3Title}</span>
+                  </div>
+                  <p className="text-slate-600 text-xs font-normal leading-relaxed">{t.step3Desc}</p>
                 </div>
               </div>
             </div>
           )}
 
-          {/* TAB 3: Questions to Ask Your Doctor */}
+          {/* TAB 4: Questions to Ask Your Doctor */}
           {activeSubTab === "doctor_questions" && (
-            <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-md space-y-6">
+            <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6">
               <div className="border-b border-slate-100 pb-4">
                 <h3 className="font-extrabold text-slate-900 text-lg">{t.docQuestionsTitle}</h3>
                 <p className="text-slate-500 text-xs font-normal">{t.docQuestionsSubtitle}</p>
@@ -1024,9 +1414,9 @@ export default function CommonManView({
             </div>
           )}
 
-          {/* TAB 4: Heart Myths & FAQs */}
+          {/* TAB 5: Heart Myths & FAQs */}
           {activeSubTab === "faq_myths" && (
-            <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-md space-y-6">
+            <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6">
               <div className="border-b border-slate-100 pb-4">
                 <h3 className="font-extrabold text-slate-900 text-lg">{t.mythsTitle}</h3>
                 <p className="text-slate-500 text-xs font-normal">{t.mythsSubtitle}</p>
@@ -1075,6 +1465,27 @@ export default function CommonManView({
         </div>
 
       </div>
+
+      {/* Lab Report Scanner Modal for Citizens */}
+      <AnimatePresence>
+        {isLabScannerOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-4xl max-h-[92vh] flex flex-col"
+            >
+              <LabReportScanner
+                onApplyData={handleApplyCitizenLabReport}
+                onClose={() => setIsLabScannerOpen(false)}
+                isModal={true}
+                theme="citizen"
+              />
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

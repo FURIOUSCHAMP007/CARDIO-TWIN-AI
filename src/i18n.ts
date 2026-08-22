@@ -32,6 +32,7 @@ export const translations = {
     navCvdLibrary: "Heart Guide & Library",
     navRiskMap: "Cardiovascular Risk Map",
     navAiChat: "AI Consult Chat",
+    navEhrProtocols: "EHR & FHIR",
     navArchitecture: "Architecture",
     navTechStack: "Tech Stack",
 
@@ -71,6 +72,15 @@ export const translations = {
     commonManTitle: "My Heart Health Guide 🫀",
     commonManSubtitle: "No confusing medical jargon or complex charts. Just clear answers, your estimated Heart Age, and simple everyday steps to stay healthy.",
     
+    // Quick Presets & Name
+    citizenNameLabel: "Citizen / Full Name",
+    citizenNamePlaceholder: "e.g., Rajesh Kumar",
+    quickPresetsTitle: "Quick Profile Presets",
+    presetYoung: "Young & Active (28 yrs)",
+    presetMiddle: "Middle Age Routine (48 yrs)",
+    presetSenior: "Senior Heart Check (68 yrs)",
+    presetReset: "Reset All",
+    
     // Quick Heart Check
     quickCheckTitle: "Quick Heart Check",
     quickCheckSubtitle: "Answer a few simple everyday questions.",
@@ -101,8 +111,18 @@ export const translations = {
     bpExact: "I have exact numbers",
     bpTop: "Top Number (Systolic)",
     bpBottom: "Bottom Number (Diastolic)",
+
+    qCholGlucose: "4. Blood Fat & Sugar Levels",
+    cholesterolLabel: "Total Cholesterol (Blood Fat)",
+    glucoseLabel: "Blood Sugar (Glucose)",
+    cholNormal: "Normal (< 200)",
+    cholBorderline: "Borderline (200-239)",
+    cholHigh: "High (240+)",
+    glucoseNormal: "Normal (70-99)",
+    glucosePre: "Pre-Diabetes (100-125)",
+    glucoseHigh: "High / Diabetes (126+)",
     
-    qHabits: "4. Daily Habits",
+    qHabits: "5. Daily Habits",
     smokeQuestion: "Do you smoke cigarettes or tobacco?",
     smokeSub: "Includes regular vaping or smoking.",
     yes: "Yes",
@@ -112,7 +132,7 @@ export const translations = {
     actModerate: "Moderate Walk",
     actActive: "Active / Sports",
     
-    qMedical: "5. Medical Background",
+    qMedical: "6. Medical Background",
     medDiabetes: "Diagnosed with Diabetes or High Blood Sugar",
     medFamily: "Parents or Siblings had heart attack / stroke before age 60",
     medBp: "Taking Blood Pressure or Cholesterol Medication",
@@ -122,6 +142,7 @@ export const translations = {
 
     // Tabs
     tabHeartScore: "Heart Score & Age",
+    tabPathology: "Body Metrics Explained",
     tabActionPlan: "3-Step Action Plan",
     tabDoctorQuestions: "Questions for Doctor",
     tabFaqMyths: "Heart Myths & FAQs",
@@ -258,6 +279,15 @@ export const translations = {
     commonManTitle: "ನನ್ನ ಹೃದಯ ಆರೋಗ್ಯ ಮಾರ್ಗದರ್ಶಿ 🫀",
     commonManSubtitle: "ಗೊಂದಲಮಯ ವೈದ್ಯಕೀಯ ಪದಗಳಿಲ್ಲ, ಸಂಕೀರ್ಣ ಚಾರ್ಟ್‌ಗಳಿಲ್ಲ. ಸ್ಪಷ್ಟ ಉತ್ತರಗಳು, ನಿಮ್ಮ ಅಂದಾಜು ಹೃದಯದ ವಯಸ್ಸು (Heart Age) ಮತ್ತು ಆರೋಗ್ಯವಾಗಿರಲು ಸರಳ ದೈನಂದಿನ ಹಂತಗಳು.",
     
+    // Quick Presets & Name
+    citizenNameLabel: "ನಾಗರಿಕರ / ಪೂರ್ಣ ಹೆಸರು",
+    citizenNamePlaceholder: "ಉದಾಹರಣೆಗೆ: ರಾಜೇಶ್ ಕುಮಾರ್",
+    quickPresetsTitle: "ತ್ವರಿತ ಪ್ರೊಫೈಲ್ ಆಯ್ಕೆಗಳು",
+    presetYoung: "ಯುವ & ಸಕ್ರಿಯ (28 ವರ್ಷ)",
+    presetMiddle: "ಮಧ್ಯವಯಸ್ಸಿನ ದಿನಚರಿ (48 ವರ್ಷ)",
+    presetSenior: "ಹಿರಿಯ ನಾಗರಿಕರ ತಪಾಸಣೆ (68 ವರ್ಷ)",
+    presetReset: "ಎಲ್ಲವನ್ನೂ ಮರುಹೊಂದಿಸಿ",
+    
     // Quick Heart Check
     quickCheckTitle: "ತ್ವರಿತ ಹೃದಯ ತಪಾಸಣೆ",
     quickCheckSubtitle: "ಕೆಲವು ಸರಳ ದೈನಂದಿನ ಪ್ರಶ್ನೆಗಳಿಗೆ ಉತ್ತರಿಸಿ.",
@@ -288,8 +318,18 @@ export const translations = {
     bpExact: "ನನ್ನ ಬಳಿ ನಿಖರ ಸಂಖ್ಯೆಗಳಿವೆ",
     bpTop: "ಮೇಲಿನ ಸಂಖ್ಯೆ (ಸಿಸ್ಟೊಲಿಕ್)",
     bpBottom: "ಕೆಳಗಿನ ಸಂಖ್ಯೆ (ಡಯಾಸ್ಟೊಲಿಕ್)",
+
+    qCholGlucose: "4. ರಕ್ತದ ಕೊಬ್ಬು ಮತ್ತು ಸಕ್ಕರೆ ಮಟ್ಟ",
+    cholesterolLabel: "ಒಟ್ಟು ಕೊಲೆಸ್ಟ್ರಾಲ್ (ರಕ್ತದ ಕೊಬ್ಬು)",
+    glucoseLabel: "ರಕ್ತದ ಸಕ್ಕರೆ (ಗ್ಲೂಕೋಸ್)",
+    cholNormal: "ಸಾಮಾನ್ಯ (< 200)",
+    cholBorderline: "ಮಧ್ಯಮ (200-239)",
+    cholHigh: "ಹೆಚ್ಚು (240+)",
+    glucoseNormal: "ಸಾಮಾನ್ಯ (70-99)",
+    glucosePre: "ಪೂರ್ವ ಮಧುಮೇಹ (100-125)",
+    glucoseHigh: "ಅಧಿಕ / ಮಧುಮೇಹ (126+)",
     
-    qHabits: "4. ದೈನಂದಿನ ಅಭ್ಯಾಸಗಳು",
+    qHabits: "5. ದೈನಂದಿನ ಅಭ್ಯಾಸಗಳು",
     smokeQuestion: "ನೀವು ಸಿಗರೇಟ್ ಅಥವಾ ತಂಬಾಕು ಸೇದುತ್ತೀರಾ?",
     smokeSub: "ನಿಯಮಿತ ಧೂಮಪಾನ ಅಥವಾ ವೇಪಿಂಗ್ ಒಳಗೊಂಡಿದೆ.",
     yes: "ಹೌದು",
@@ -299,7 +339,7 @@ export const translations = {
     actModerate: "ಮಧ್ಯಮ ನಡಿಗೆ",
     actActive: "ಸಕ್ರಿಯ / ಕ್ರೀಡೆ",
     
-    qMedical: "5. ವೈದ್ಯಕೀಯ ಹಿನ್ನೆಲೆ",
+    qMedical: "6. ವೈದ್ಯಕೀಯ ಹಿನ್ನೆಲೆ",
     medDiabetes: "ಮಧುಮೇಹ ಅಥವಾ ಅಧಿಕ ರಕ್ತದ ಸಕ್ಕರೆ ರೋಗನಿರ್ಣಯ",
     medFamily: "ತಂದೆ-ತಾಯಿ ಅಥವಾ ಒಡಹುಟ್ಟಿದವರಿಗೆ 60 ವರ್ಷಕ್ಕಿಂತ ಮುಂಚೆ ಹೃದಯಾಘಾತ / ಪಾರ್ಶ್ವವಾಯು",
     medBp: "ರಕ್ತದೊತ್ತಡ ಅಥವಾ ಕೊಲೆಸ್ಟ್ರಾಲ್ ಔಷಧಿ ತೆಗೆದುಕೊಳ್ಳುತ್ತಿದ್ದೀರಾ",
@@ -309,6 +349,7 @@ export const translations = {
 
     // Tabs
     tabHeartScore: "ಹೃದಯ ಸ್ಕೋರ್ & ವಯಸ್ಸು",
+    tabPathology: "ದೇಹದ ಮೆಟ್ರಿಕ್ಸ್ ವಿವರಣೆ",
     tabActionPlan: "3-ಹಂತದ ಕ್ರಿಯಾ ಯೋಜನೆ",
     tabDoctorQuestions: "ವೈದ್ಯರಿಗೆ ಕೇಳಬೇಕಾದ ಪ್ರಶ್ನೆಗಳು",
     tabFaqMyths: "ಹೃದಯದ ತಪ್ಪು ಕಲ್ಪನೆಗಳು & ಸತ್ಯಗಳು",
@@ -445,6 +486,15 @@ export const translations = {
     commonManTitle: "मेरा हृदय स्वास्थ्य गाइड 🫀",
     commonManSubtitle: "कोई जटिल मेडिकल शब्दावली या भारी चार्ट नहीं। केवल स्पष्ट उत्तर, आपकी अनुमानित हृदय आयु (Heart Age) और स्वस्थ रहने के आसान दैनिक उपाय।",
     
+    // Quick Presets & Name
+    citizenNameLabel: "नागरिक / पूरा नाम",
+    citizenNamePlaceholder: "उदा., राजेश कुमार",
+    quickPresetsTitle: "त्वरित प्रोफाइल चयन",
+    presetYoung: "युवा एवं सक्रिय (28 वर्ष)",
+    presetMiddle: "मध्यम आयु दिनचर्या (48 वर्ष)",
+    presetSenior: "वरिष्ठ नागरिक जांच (68 वर्ष)",
+    presetReset: "सब कुछ रीसेट करें",
+    
     // Quick Heart Check
     quickCheckTitle: "त्वरित हृदय जांच",
     quickCheckSubtitle: "कुछ सरल दैनिक प्रश्नों के उत्तर दें।",
@@ -475,8 +525,18 @@ export const translations = {
     bpExact: "मेरे पास सटीक संख्या है",
     bpTop: "ऊपर की संख्या (सिस्टोलिक)",
     bpBottom: "नीचे की संख्या (डायस्टोलिक)",
+
+    qCholGlucose: "4. रक्त वसा एवं शर्करा स्तर",
+    cholesterolLabel: "कुल कोलेस्ट्रॉल (रक्त वसा)",
+    glucoseLabel: "रक्त शर्करा (ग्लूकोज)",
+    cholNormal: "सामान्य (< 200)",
+    cholBorderline: "मध्यम (200-239)",
+    cholHigh: "उच्च (240+)",
+    glucoseNormal: "सामान्य (70-99)",
+    glucosePre: "प्री-डायबिटीज (100-125)",
+    glucoseHigh: "उच्च / डायबिटीज (126+)",
     
-    qHabits: "4. दैनिक आदतें",
+    qHabits: "5. दैनिक आदतें",
     smokeQuestion: "क्या आप सिगरेट या तंबाकू का सेवन करते हैं?",
     smokeSub: "नियमित धूम्रपान या वेपिंग शामिल है।",
     yes: "हाँ",
@@ -486,7 +546,7 @@ export const translations = {
     actModerate: "मध्यम पैदल चलना",
     actActive: "सक्रिय / खेलकूद",
     
-    qMedical: "5. मेडिकल पृष्ठभूमि",
+    qMedical: "6. मेडिकल पृष्ठभूमि",
     medDiabetes: "डायबिटीज या उच्च रक्त शर्करा का निदान",
     medFamily: "माता-पिता या भाई-बहन को 60 वर्ष से पहले दिल का दौरा / स्ट्रोक",
     medBp: "रक्तचाप या कोलेस्ट्रॉल की दवा ले रहे हैं",
@@ -496,6 +556,7 @@ export const translations = {
 
     // Tabs
     tabHeartScore: "हार्ट स्कोर एवं आयु",
+    tabPathology: "शरीर मेट्रिक्स स्पष्टीकरण",
     tabActionPlan: "3-चरणीय कार्य योजना",
     tabDoctorQuestions: "डॉक्टर से पूछने योग्य प्रश्न",
     tabFaqMyths: "हृदय संबंधी भ्रम और तथ्य",

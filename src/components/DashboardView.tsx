@@ -15,7 +15,6 @@ import { PredictionResult, PatientData } from "../types";
 // Import Advanced AI Sub-components
 import HeartAnatomyVisualizer from "./HeartAnatomyVisualizer";
 import SurvivalTimeline from "./SurvivalTimeline";
-import VoiceAssistant from "./VoiceAssistant";
 import PanelManagement from "./PanelManagement";
 import ClinicalReportExport from "./ClinicalReportExport";
 
@@ -84,6 +83,7 @@ interface DashboardViewProps {
   geminiSummary: string;
   isGeminiLoading: boolean;
   predictionHistory?: any[];
+  onOpenEHRProtocols?: () => void;
 }
 
 export default function DashboardView({ 
@@ -93,7 +93,8 @@ export default function DashboardView({
   onLoadProfile,
   geminiSummary, 
   isGeminiLoading,
-  predictionHistory = []
+  predictionHistory = [],
+  onOpenEHRProtocols
 }: DashboardViewProps) {
   
   const { patientData, overallRisk, riskCategory, modelConfidence, dataQuality, modelsComparison, shap, cluster, multiCvd, counterfactuals, timestamp } = predictionResult;
@@ -651,7 +652,10 @@ export default function DashboardView({
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
             <h3 className="font-bold text-slate-800 text-base">Assessment Dashboard Active</h3>
           </div>
-          <p className="text-slate-500 text-xs">Patient Profile: {patientData.age} y/o {patientData.sex} • Computed: {timestamp}</p>
+          <p className="text-slate-500 text-xs">
+            {patientData.name ? <strong className="text-slate-800 font-bold mr-1.5">{patientData.name}</strong> : null}
+            Patient Profile: {patientData.age} y/o {patientData.sex} • Computed: {timestamp}
+          </p>
         </div>
         
         <div className="flex gap-3">
@@ -850,7 +854,6 @@ export default function DashboardView({
                       <div className="prose prose-slate max-w-none text-slate-600">
                         {renderCleanSummary(activeText)}
                       </div>
-                      <VoiceAssistant textToSpeak={activeText} />
 
                       {/* Personalized Treatment, Medicine, and Lifestyle Pathways */}
                       <div className="border-t border-slate-100 pt-5 mt-5 space-y-4">
@@ -1837,7 +1840,13 @@ export default function DashboardView({
       {/* Advanced Panel & Clinical Export Modules */}
       <div className="grid lg:grid-cols-2 gap-8">
         <PanelManagement currentProfile={patientData} onLoadProfile={onLoadProfile} />
-        <ClinicalReportExport patientData={patientData} overallRisk={overallRisk} bestModelName="XGBoost Classifier" summaryText={geminiSummary} />
+        <ClinicalReportExport 
+          patientData={patientData} 
+          overallRisk={overallRisk} 
+          bestModelName="XGBoost Classifier" 
+          summaryText={geminiSummary} 
+          onOpenEHRProtocols={onOpenEHRProtocols}
+        />
       </div>
 
       {/* Official Platform Definition & Medical Advisory Disclaimer Footer */}

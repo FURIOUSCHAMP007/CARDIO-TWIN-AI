@@ -1,103 +1,179 @@
-# 🫀 CardioTwin AI — Predictive Cardiology & Interactive Myocardial Digital Twin
+# 🫀 CardioTwin AI — Precision Cardiovascular Risk Prediction & Digital Twin Engine
 
-CardioTwin AI is a high-performance clinical-grade cardiology research simulator, interactive anatomy visualization sandbox, and conversational medical consultation advisor. It integrates mathematical predictors (XGBoost classifiers, SHAP explainability matrices, K-Means high-dimensional clinical cohort clusterings) alongside next-generation generative AI pipelines (Gemini 3.5 multi-turn text with Google Search Grounding, Gemini 3.5 audio transcription, and Gemini 3.1 Live audio stream WebSockets).
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg?logo=typescript)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-18+-61DAFB.svg?logo=react)](https://reactjs.org/)
+[![TailwindCSS](https://img.shields.io/badge/Tailwind-4.0+-38B2AC.svg?logo=tailwind-css)](https://tailwindcss.com/)
+[![Express](https://img.shields.io/badge/Express-4.x-000000.svg?logo=express)](https://expressjs.com/)
+[![Google Gemini API](https://img.shields.io/badge/Google_Gemini-3.5_Flash_&_3.1_Live-8E75B2.svg?logo=google)](https://ai.google.dev/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
----
-
-## 🚀 Key Architectural Pillars & Features
-
-### 1. Mathematical Clinical Modeling Engine
-*   **Predictive Risk Classifier**: Employs mathematical classifiers to evaluate overall cardiovascular event risk (CVD, Stroke, Coronary Heart Disease) dynamically based on clinical parameters such as Systolic/Diastolic blood pressure, lipid levels (HDL, LDL, Total Cholesterol), medication compliance, lifestyle factors (tobacco load, sedentary levels), and demographic profiles.
-*   **SHAP (SHapley Additive exPlanations)**: Calculates the game-theoretic mathematical contribution of each patient variable to explain *exactly* how each vital sign or lifestyle factor drives the overall risk score up or down.
-*   **K-Means Cohort Cluster Positioning**: Evaluates high-dimensional spatial distances to locate the patient's place within real clinical cohorts, showing clinical similarity indexes relative to representative baseline profiles (e.g., Healthy Baseline, Severe Hypertensive, Atrial Fibrillation).
-*   **Counterfactual Sandbox**: Allows researchers and clinicians to run "what-if" risk mitigations (e.g., reducing blood pressure by 10 mmHg, increasing medication compliance to 100%) and watch risk values dynamically adapt in real time.
-
-### 2. Interactive Digital Twin Heart Model
-*   **Vector Myocardial SVG Renderer**: Features a dynamic, animated vector heart illustration that morphs states in response to patient variables (e.g., exhibiting left ventricular thickness for hypertrophic parameters, irregular signal contractions for arrhythmia, and arterial cholesterol blockages).
-*   **Hover-Based Interactive Hotspots**: Integrates floating information hotspots powered by `framer-motion` over anatomical sub-structures (Aorta Arch, Left Ventricle, Right Chambers, Coronary Arteries). Hovering triggers responsive tooltips explaining structural physiology and translating patient-specific health statuses.
-
-### 3. Session comparison runs switcher
-*   **Runs Historical Store**: Retains stateful records of each analysis run within the active session.
-*   **Dynamic Comparison Panel**: Displays an interactive toggle dock right beneath the main navigation bar. Allows researchers to toggle instantly between different patient conditions to compare changes in risk indexes, SHAP contributions, and cohort trends.
-
-### 4. CardioTwin Consult AI (Gemini Suite)
-*   **Conversational Advisor**: A multi-turn medical chat workspace guided by system instructions defining a friendly clinical cardiology advisor.
-*   **Google Search Grounding**: Integrates live Google Search retrieval. When toggled, Gemini queries medical databases, returning up-to-date consensus guidelines alongside verified source citation buttons.
-*   **Vocal Transcription**: Features a one-tap recording utility that captures spoken questions, converts them to WebM, and transcribes them using `gemini-3.5-flash` to populate the text bar.
-*   **Gemini Live Voice (Live API)**: Connects to a high-speed server WebSocket feeding raw audio straight to the low-latency `gemini-3.1-flash-live-preview` engine. Captures user microphones at `16kHz` PCM, and receives/schedules incoming `24kHz` audio chunks for real-time spoken clinical consultations.
+**CardioTwin AI** is a clinical-grade cardiology decision-support and patient empowerment platform. It unifies explainable machine learning models (XGBoost classifiers, SHAP game-theoretic feature attributions, and K-Means cohort clustering), interactive myocardial anatomy digital twins, multidimensional cardiovascular disease comorbidity risk maps, and multimodal conversational AI (powered by Google Gemini 3.5 and low-latency Gemini 3.1 Live Audio WebSockets).
 
 ---
 
-## 🛠️ Technology Stack & Dependencies
+## 🌟 Executive Overview
 
-*   **Frontend**: React (v18+), Vite, Tailwind CSS (for modern typography and fluid layouts), Lucide React (vector icon systems).
-*   **Animation**: `motion` (formerly Framer Motion) from `motion/react` for smooth transitions, modal slides, and responsive hotspot tooltips.
-*   **Backend Server**: Node.js Express Server (`server.ts`) bundled with `esbuild`.
-*   **Generative AI SDK**: `@google/genai` (modernized Google GenAI SDK).
-*   **Real-time WebSockets**: `ws` package for raw binary streaming.
-*   **Audio Pipelines**: Web Audio API (ScriptProcessorNode, AudioContext) translating browser float-32 channels to/from server-side 16-bit PCM arrays.
+CardioTwin AI bridges the gap between raw clinical biomarkers and actionable cardiovascular health insights for two distinct stakeholder personas:
+
+1. **Everyday Citizens & Patients (Citizen Mode)**: Jargon-free, intuitive heart health evaluations, interactive risk gauges, lifestyle what-if simulations, and multilingual localization in **English**, **ಕನ್ನಡ (Kannada)**, and **हिन्दी (Hindi)**.
+2. **Cardiologists & Specialists (Doctor Mode)**: Comprehensive clinical analytics, anomaly detection (Isolation Forest), multi-disease prognosis timelines, game-theoretic SHAP force plots, survival curve estimates, dynamic cohort clustering, and professional EHR/PDF clinical report generation.
 
 ---
 
-## 💻 Developer Setup & Running Locally
+## 🚀 Core Features & Architectural Capabilities
 
-Follow these steps to spin up the full-stack development workspace:
+### 1. 🫀 Explainable Machine Learning & Risk Quantification
+* **Multi-Disease Risk Classifier**: Evaluates aggregate 10-year CVD, Coronary Artery Disease (CAD), Stroke, Heart Failure (HF), and Arrhythmia probabilities based on physiological biomarkers (blood pressure, lipid profile, HbA1c, resting heart rate, BMI, ECG patterns, and lifestyle factors).
+* **Game-Theoretic SHAP Attributions**: Computes local and global Shapley values to pinpoint the exact contribution of each clinical metric to the patient's risk trajectory.
+* **Interactive "What-If" Counterfactual Engine**: Empowers clinicians and patients to simulate lifestyle or therapeutic interventions (e.g., reducing systolic BP by 15 mmHg, smoking cessation, or statin therapy) and witness simulated risk reductions in real time.
+* **Phenotype Cohort Spatial Clustering**: Utilizes multidimensional Euclidean distance modeling to benchmark patient phenotypes against calibrated reference cohorts (e.g., *Healthy Active Athlete*, *Metabolic Syndrome*, *Severe Hypertensive*).
 
-### 1. Configure Secrets and Environment Variables
-Define your Gemini API credential inside `.env` in your root directory:
-```env
-# .env
-GEMINI_API_KEY=your_actual_google_gemini_api_key_here
-PORT=3000
-```
-*(An example template is supplied in `.env.example`.)*
+### 2. 🩺 Interactive 3D/Vector Myocardial Digital Twin
+* **Anatomical SVG Engine**: A morphing vector heart model reflecting physiological pathologies (left ventricular hypertrophy, coronary atheroma plaque deposition, arrhythmias, and aortic dilation).
+* **Diagnostic Anatomical Hotspots**: Interactive inspection points positioned across key cardiac regions (Aortic Arch, Left/Right Ventricles, Left/Right Atria, Coronary Arteries) that deliver localized anatomical context and clinical implications on hover.
 
-### 2. Install Project Dependencies
-Use npm to download package nodes:
-```bash
-npm install
-```
+### 3. 🌐 Graph-Based Cardiovascular Comorbidity Risk Map
+* **Multi-Condition Network Graph**: Renders interconnected cardiovascular and metabolic diseases (Hypertension, CAD, Stroke, Type 2 Diabetes, CKD, Atrial Fibrillation, Peripheral Artery Disease).
+* **Dynamic Node Sizing & Edge Weighting**: Highlights cross-organ disease progression vectors and relative transmission risks customized to the patient's clinical profile.
 
-### 3. Launch the Development Server
-Starts the Express server alongside the Vite SPA middleware:
-```bash
-npm run dev
-```
-Open [http://localhost:3000](http://localhost:3000) inside your web browser.
+### 4. 📚 Comprehensive Cardiovascular Disease Library
+* **Clinical Knowledge Base**: In-depth medical reference manuals for major cardiovascular pathologies covering pathophysiology, diagnostic criteria, clinical presentation, and evidence-based therapeutic guidelines (AHA/ACC and ESC aligned).
 
-### 4. Build for Production
-To bundle and compile the client-side files and build the server executable:
-```bash
-npm run build
-```
-Start the production runtime:
-```bash
-npm run start
-```
+### 5. 🤖 Multimodal AI Clinical Consult (Gemini Suite)
+* **Intelligent Clinical Dialogue**: Multi-turn clinical cardiology chat powered by Google's `gemini-2.5-flash` model with dedicated medical advisor system instructions.
+* **Google Search Grounding**: Real-time retrieval of contemporary peer-reviewed clinical guidelines, trials, and epidemiological consensus with direct source citations.
+* **Voice-to-Text Clinical Dictation**: Seamless audio recording and transcription of medical inquiries.
+* **Real-time Gemini Live Voice API**: Low-latency bidirectional audio streaming via WebSockets (`gemini-2.5-flash` Live API at 16kHz PCM input / 24kHz PCM output) for conversational clinical discussions.
+
+### 6. 📄 Clinical EHR Export & Multi-Run Benchmarking
+* **Formal Medical Report Generator**: Formats comprehensive diagnostic findings into print-ready clinical summaries with risk matrices, biomarker alerts, and management suggestions.
+* **Multi-Run Session History Dock**: Allows specialists to store, compare, and toggle between iterative diagnostic runs across different intervention scenarios.
 
 ---
 
-## 🫀 Key File Directory Structures
+## 🛠️ Technology Stack & System Architecture
 
 ```
-.
-├── server.ts                    # Full-stack Node.js Express server, API routers & Live WebSocket Bridge
-├── package.json                 # Node manifest, dependencies, and build scripts
+┌────────────────────────────────────────────────────────────────────────┐
+│                        CardioTwin AI Architecture                      │
+└────────────────────────────────────────────────────────────────────────┘
+                                   │
+         ┌─────────────────────────┴─────────────────────────┐
+         ▼                                                   ▼
+┌─────────────────────────────────┐         ┌─────────────────────────────────┐
+│     Client-Side UI (React 18)   │         │     Backend Server (Node.js)    │
+├─────────────────────────────────┤         ├─────────────────────────────────┤
+│ • Vite + TypeScript             │         │ • Express 4.x REST API          │
+│ • Tailwind CSS 4.0              │◄───────►│ • WebSocket (`ws`) Audio Bridge │
+│ • Framer Motion (`motion`)      │ HTTP/WS │ • @google/genai SDK Integration │
+│ • Lucide React Iconography      │         │ • Secure Environment Key Proxy  │
+│ • Recharts / D3.js Visualizers  │         │ • Bundled with esbuild (CJS)    │
+└─────────────────────────────────┘         └─────────────────────────────────┘
+```
+
+| Layer | Technologies / Libraries |
+| :--- | :--- |
+| **Frontend Framework** | React 18, TypeScript, Vite |
+| **Styling & Design** | Tailwind CSS 4.0, Plus Jakarta Sans, Outfit, JetBrains Mono |
+| **Animation & Motion** | `motion/react` |
+| **Iconography** | Lucide React |
+| **Backend & Ingress** | Express 4.x, Node.js, `ws` (WebSockets) |
+| **AI / Large Language Models** | Google GenAI SDK (`@google/genai`), Gemini 2.5 Flash, Gemini Live API |
+| **Build & Bundler** | Vite (Client SPA), `esbuild` (Server CJS Bundle), `tsx` (Dev Execution) |
+
+---
+
+## 📂 Project Directory Structure
+
+```
+├── server.ts                       # Express backend, REST endpoints & Gemini Live WebSocket gateway
+├── package.json                    # Project dependencies, build scripts, and metadata
+├── vite.config.ts                  # Vite build and development configuration
+├── tsconfig.json                   # TypeScript compiler configuration
+├── index.html                      # HTML entrypoint with preconnected typography
+├── metadata.json                   # AI Studio platform configuration
+├── .env.example                    # Template for required environment variables
 ├── src/
-│   ├── App.tsx                  # Main App workspace coordinating navigation, tabs, and prediction states
-│   ├── main.tsx                 # Core Vite client bootstrapper
-│   ├── index.css                # Global CSS stylesheet importing Tailwind CSS
-│   ├── types.ts                 # Shared clinical data models and prediction schemas
-│   ├── components/
-│   │   ├── AIClinicChatView.tsx          # Chat thread workspace, voice transcription & Live API spoken calls
-│   │   ├── HeartAnatomyVisualizer.tsx   # SVG heart vector model & hover hotspot tooltips
-│   │   ├── CardiovascularRiskMapView.tsx # Interactive 2D GNN network of comorbidities
-│   │   ├── PatientForm.tsx              # Parameter adjustments, clinical sliders & cohort presets
-│   │   ├── DashboardView.tsx            # Main clinical reports, SHAP charts & cohort groupings
-│   │   └── CvdLibraryView.tsx           # Reference cardiovascular library view
+│   ├── main.tsx                    # React client entry point
+│   ├── App.tsx                     # Top-level workspace coordinator, routing & session state
+│   ├── index.css                   # Global styles & Tailwind layers
+│   ├── types.ts                    # Global TypeScript interfaces for patient records & model schemas
+│   ├── i18n.ts                     # Multilingual localization dictionaries (EN, KN, HI)
+│   ├── data/
+│   │   ├── cvdLibraryData.ts       # Cardiology disease monographs & guideline repository
+│   │   └── defaultPatients.ts      # Calibrated clinical archetype sample presets
+│   └── components/
+│       ├── LandingView.tsx                 # Hero showcase, value propositions & phenotype launchers
+│       ├── CommonManView.tsx               # Citizen mode health check, simple gauges & advice
+│       ├── DashboardView.tsx               # Clinical specialist analytics, SHAP & risk gauges
+│       ├── PatientForm.tsx                 # Comprehensive clinical input form with anomaly validator
+│       ├── AIClinicChatView.tsx            # Multi-turn Gemini AI chat with Search Grounding & Live API
+│       ├── CardiovascularRiskMapView.tsx   # Interactive comorbidity disease graph visualizer
+│       ├── CvdLibraryView.tsx              # Medical disease library and clinical encyclopedia
+│       ├── HeartAnatomyVisualizer.tsx      # Morphing vector heart SVG with interactive hotspots
+│       ├── ArchitectureView.tsx            # System pipeline & mathematical model architecture
+│       ├── ClinicalReportExport.tsx        # Printable EHR clinical document exporter
+│       ├── SurvivalTimeline.tsx            # Longitudinal Kaplan-Meier style survival forecast
+│       └── PanelManagement.tsx             # Multi-run session comparison panel
 ```
 
 ---
 
-## ⚕️ Disclaimer
-*CardioTwin AI is a simulation, clinical research, and education sandbox tool. It is not intended to diagnose, treat, cure, or prevent any cardiovascular disease. All clinical recommendations or briefs generated by the LLM models must be cross-verified by qualified healthcare professionals.*
+## ⚡ Getting Started
+
+### Prerequisites
+* **Node.js**: Version 18.0.0 or later
+* **npm**: Version 9.0.0 or later
+* **Google Gemini API Key**: Obtainable from [Google AI Studio](https://aistudio.google.com/)
+
+### Installation & Local Setup
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/your-username/cardiotwin-ai.git
+   cd cardiotwin-ai
+   ```
+
+2. **Configure Environment Variables**:
+   Create a `.env` file in the root directory by copying `.env.example`:
+   ```bash
+   cp .env.example .env
+   ```
+   Add your Gemini API Key:
+   ```env
+   GEMINI_API_KEY=your_gemini_api_key_here
+   ```
+
+3. **Install Dependencies**:
+   ```bash
+   npm install
+   ```
+
+4. **Launch the Development Server**:
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) in your web browser.
+
+5. **Build for Production**:
+   ```bash
+   npm run build
+   ```
+   To run the production build:
+   ```bash
+   npm run start
+   ```
+
+---
+
+## 🔒 Security & Privacy Practices
+
+* **Zero Client-Side API Key Exposure**: All calls to the Gemini API and external endpoints are proxied through the server-side Express backend. No secret credentials are sent to the client browser.
+* **Transient In-Memory Processing**: Patient biomarkers and clinical simulations are processed locally in state memory during the session without unconsented database storage.
+* **Clinical Disclaimer**: CardioTwin AI is an investigational decision-support software designed for educational, research, and advisory exploration. It does not replace professional medical judgment, in-person clinical diagnosis, or emergency healthcare services.
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.

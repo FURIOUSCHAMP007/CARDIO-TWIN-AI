@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
-  Heart, Activity, Brain, Shield, Sparkles, Sliders, Server, Menu, X, Check, HelpCircle, Laptop, Settings, MessageSquare, User, Stethoscope, Globe
+  Heart, Activity, Brain, Shield, Sparkles, Sliders, Server, Menu, X, Check, HelpCircle, Laptop, Settings, MessageSquare, User, Stethoscope, Globe, FileCode
 } from "lucide-react";
 import LandingView from "./components/LandingView";
 import PatientForm from "./components/PatientForm";
@@ -9,12 +9,12 @@ import DashboardView from "./components/DashboardView";
 import ArchitectureView from "./components/ArchitectureView";
 import CvdLibraryView from "./components/CvdLibraryView";
 import CardiovascularRiskMapView from "./components/CardiovascularRiskMapView";
-import AIClinicChatView from "./components/AIClinicChatView";
 import CommonManView from "./components/CommonManView";
+import EHRProtocolsView from "./components/EHRProtocolsView";
 import { PatientData, PredictionResult } from "./types";
 import { Language, LANGUAGES, translations } from "./i18n";
 
-type ViewTab = "landing" | "input" | "dashboard" | "architecture" | "stack" | "cvd_library" | "risk_map" | "ai_chat" | "common_man";
+type ViewTab = "landing" | "input" | "dashboard" | "architecture" | "stack" | "cvd_library" | "risk_map" | "common_man" | "fhir_ehr";
 type UserMode = "clinical" | "common_man";
 
 interface PredictionHistoryItem {
@@ -252,16 +252,6 @@ Please review the data-grid below to examine the specific feature weights.`;
                 >
                   {t.navRiskMap}
                 </button>
-                <button
-                  id="nav-ai-chat"
-                  onClick={() => setActiveTab("ai_chat")}
-                  className={`px-3 py-2 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
-                    activeTab === "ai_chat" ? "text-rose-600 bg-rose-50/70 border-b-2 border-rose-600 rounded-none pb-1" : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 pb-1"
-                  }`}
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-rose-500 fill-rose-500/10" />
-                  {t.navAiChat}
-                </button>
               </>
             ) : (
               <>
@@ -307,14 +297,14 @@ Please review the data-grid below to examine the specific feature weights.`;
                   {t.navRiskMap}
                 </button>
                 <button
-                  id="nav-ai-chat"
-                  onClick={() => setActiveTab("ai_chat")}
+                  id="nav-ehr-protocols"
+                  onClick={() => setActiveTab("fhir_ehr")}
                   className={`px-3 py-2 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
-                    activeTab === "ai_chat" ? "text-rose-600 bg-rose-50/70 border-b-2 border-rose-600 rounded-none pb-1" : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 pb-1"
+                    activeTab === "fhir_ehr" ? "text-rose-600 bg-rose-50/70 border-b-2 border-rose-600 rounded-none pb-1" : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 pb-1"
                   }`}
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-rose-500 fill-rose-500/10" />
-                  {t.navAiChat}
+                  <FileCode className="w-3.5 h-3.5 text-rose-500" />
+                  <span>{t.navEhrProtocols || "EHR & FHIR"}</span>
                 </button>
                 <button
                   id="nav-pipeline-architecture"
@@ -497,13 +487,6 @@ Please review the data-grid below to examine the specific feature weights.`;
                   >
                     {t.navRiskMap}
                   </button>
-                  <button
-                    onClick={() => { setActiveTab("ai_chat"); setMobileMenuOpen(false); }}
-                    className="py-2.5 px-3 text-left text-sm font-bold text-slate-700 hover:bg-slate-50 rounded-lg flex items-center gap-2"
-                  >
-                    <Sparkles className="w-4 h-4 text-rose-500" />
-                    {t.navAiChat}
-                  </button>
                 </>
               ) : (
                 <>
@@ -543,6 +526,13 @@ Please review the data-grid below to examine the specific feature weights.`;
                   >
                     <Sparkles className="w-4 h-4 text-rose-500" />
                     {t.navAiChat}
+                  </button>
+                  <button
+                    onClick={() => { setActiveTab("fhir_ehr"); setMobileMenuOpen(false); }}
+                    className="py-2.5 px-3 text-left text-sm font-bold text-rose-600 hover:bg-rose-50 rounded-lg flex items-center gap-2"
+                  >
+                    <FileCode className="w-4 h-4 text-rose-500" />
+                    <span>{t.navEhrProtocols || "EHR & FHIR Protocols"}</span>
                   </button>
                   <button
                     onClick={() => { setActiveTab("architecture"); setMobileMenuOpen(false); }}
@@ -668,7 +658,6 @@ Please review the data-grid below to examine the specific feature weights.`;
                   setUserMode("clinical");
                   setActiveTab(prediction ? "dashboard" : "input");
                 }}
-                onOpenAiChat={() => setActiveTab("ai_chat")}
                 isLoading={isPredicting}
                 language={language}
                 onLanguageChange={setLanguage}
@@ -717,6 +706,34 @@ Please review the data-grid below to examine the specific feature weights.`;
                 geminiSummary={geminiSummary}
                 isGeminiLoading={isGeminiLoading}
                 predictionHistory={predictionHistory}
+                onOpenEHRProtocols={() => setActiveTab("fhir_ehr")}
+              />
+            </motion.div>
+          )}
+
+          {/* View Tab: EHR & FHIR Healthcare Protocols Suite */}
+          {activeTab === "fhir_ehr" && (
+            <motion.div
+              key="fhir_ehr"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="max-w-7xl mx-auto px-6 py-8"
+            >
+              <EHRProtocolsView 
+                patientData={patientData || (prediction ? prediction.patientData : SAMPLE_CASES.high)}
+                prediction={prediction}
+                onApplyExtractedPatient={(extracted) => {
+                  setPatientData(extracted);
+                  executeAnalysis(extracted);
+                }}
+                onNavigateToDashboard={() => {
+                  if (prediction) {
+                    setActiveTab("dashboard");
+                  } else {
+                    setActiveTab("input");
+                  }
+                }}
               />
             </motion.div>
           )}
@@ -757,18 +774,6 @@ Please review the data-grid below to examine the specific feature weights.`;
                 prediction={prediction}
                 patientData={patientData}
               />
-            </motion.div>
-          )}
-
-          {/* View Tab: AI Clinic Chat and Live Voice */}
-          {activeTab === "ai_chat" && (
-            <motion.div
-              key="ai_chat"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-            >
-              <AIClinicChatView />
             </motion.div>
           )}
 

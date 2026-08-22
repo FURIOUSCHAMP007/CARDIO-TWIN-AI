@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { User, Activity, Heart, Shield, Sparkles, ChevronLeft, ChevronRight, CheckCircle, Info, RefreshCw, BookOpen, ChevronDown, ChevronUp, AlertCircle, Mic, MicOff, HelpCircle, X } from "lucide-react";
+import { User, Activity, Heart, Shield, Sparkles, ChevronLeft, ChevronRight, CheckCircle, Info, RefreshCw, BookOpen, ChevronDown, ChevronUp, AlertCircle, Mic, MicOff, HelpCircle, X, FileCheck, FileText, Upload, Scan } from "lucide-react";
 import { PatientData, DataQuality } from "../types";
 import { CLINICAL_COHORTS } from "../data/clinicalCohorts";
+import LabReportScanner from "./LabReportScanner";
 
 interface PatientFormProps {
   onSubmit: (data: PatientData) => void;
@@ -122,6 +123,30 @@ export default function PatientForm({ onSubmit, isLoading, initialData }: Patien
   const [selectedCohortId, setSelectedCohortId] = useState("cad");
   const [selectedCaseName, setSelectedCaseName] = useState<string | null>(null);
   const [isPresetLibraryOpen, setIsPresetLibraryOpen] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isInlineScannerOpen, setIsInlineScannerOpen] = useState(false);
+
+  const handleApplyLabReportData = (extracted: PatientData, runImmediately: boolean = false) => {
+    setFormData(prev => ({
+      ...prev,
+      ...extracted,
+      selectedCaseName: extracted.selectedCaseName || "Lab Report OCR Ingestion",
+      selectedCohortName: extracted.selectedCohortName || "Medical Diagnostic Panel",
+      caseDescription: extracted.caseDescription || "Extracted from uploaded medical laboratory report.",
+      caseNotes: extracted.caseNotes || `Total Chol: ${extracted.cholesterol} mg/dL, Glucose: ${extracted.glucose} mg/dL, BP: ${extracted.systolicBP}/${extracted.diastolicBP} mmHg`
+    }));
+    setSelectedCaseName(extracted.selectedCaseName || "Lab Report Ingestion");
+    setValidationErrors({});
+    setIsScannerOpen(false);
+    setIsInlineScannerOpen(false);
+    setStep(1);
+
+    if (runImmediately) {
+      setTimeout(() => {
+        onSubmit(extracted);
+      }, 200);
+    }
+  };
 
   // Web Speech API Voice States
   const [activeSpeechField, setActiveSpeechField] = useState<string | null>(null);
@@ -499,6 +524,76 @@ export default function PatientForm({ onSubmit, isLoading, initialData }: Patien
       {/* Form Content */}
       <form onSubmit={handleFormSubmit} onKeyDown={handleFormKeyDown} className="p-8 space-y-8">
         
+        {/* Multimodal Lab Report Scanner (PDF & Image OCR) */}
+        <div className="bg-gradient-to-r from-rose-950 via-slate-900 to-indigo-950 text-white rounded-3xl p-6 shadow-lg relative overflow-hidden border border-rose-500/30">
+          <div className="absolute -right-8 -top-8 w-40 h-40 bg-rose-500/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 relative z-10">
+            <div className="flex items-start gap-4">
+              <div className="p-3.5 bg-gradient-to-br from-rose-500 to-pink-600 rounded-2xl text-white shadow-lg shadow-rose-500/30 ring-2 ring-white/10 shrink-0">
+                <FileCheck className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                    Medical OCR & Vision AI
+                  </span>
+                  <span className="text-[10px] text-slate-300 font-semibold bg-white/10 px-2 py-0.5 rounded-full">
+                    Accepts PDF, JPG, PNG & Phone Snapshots
+                  </span>
+                </div>
+                <h3 className="text-base sm:text-lg font-black text-white tracking-tight">
+                  Scan Patient Lab Report & Blood Work
+                </h3>
+                <p className="text-xs text-slate-300 font-normal max-w-xl">
+                  Upload a lab report PDF or picture of lipid profiles, HbA1c, or hospital vitals. Gemini automatically reads the numbers and populates all 16 clinical parameters.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsInlineScannerOpen(!isInlineScannerOpen)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-extrabold transition-all cursor-pointer ${
+                  isInlineScannerOpen 
+                    ? "bg-white text-slate-900 border-white shadow-md" 
+                    : "bg-white/10 hover:bg-white/20 text-white border-white/20"
+                }`}
+              >
+                <Scan className="w-4 h-4 text-rose-400" />
+                <span>{isInlineScannerOpen ? "Hide Scanner Panel" : "Quick Inline Scanner"}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsScannerOpen(true)}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 via-rose-500 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white text-xs font-black shadow-lg shadow-rose-500/30 transition-all cursor-pointer active:scale-98"
+              >
+                <Upload className="w-4 h-4" />
+                <span>Open Full Scanner Desk</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Inline Scanner Accordion */}
+          <AnimatePresence>
+            {isInlineScannerOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="mt-6 pt-6 border-t border-white/10"
+              >
+                <LabReportScanner 
+                  onApplyData={handleApplyLabReportData}
+                  onClose={() => setIsInlineScannerOpen(false)}
+                  theme="doctor"
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
         {/* Clinical Cohort Library */}
         <div className="bg-slate-50 border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm transition-all">
           <button
@@ -719,6 +814,27 @@ export default function PatientForm({ onSubmit, isLoading, initialData }: Patien
             animate={{ opacity: 1, x: 0 }}
             className="space-y-6"
           >
+            {/* Citizen / Patient Name */}
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-slate-700">Patient / Citizen Full Name</label>
+              <div className="flex items-center gap-2">
+                <div className="relative flex-grow">
+                  <input
+                    type="text"
+                    name="name"
+                    id="input-name"
+                    placeholder="e.g., Rajesh Kumar / Jane Doe"
+                    value={formData.name || ""}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all font-medium text-slate-800 bg-white"
+                  />
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+                    <User className="w-4 h-4" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="grid md:grid-cols-2 gap-6">
               {/* Age */}
               <div className="space-y-2">
@@ -1485,6 +1601,25 @@ export default function PatientForm({ onSubmit, isLoading, initialData }: Patien
                 </button>
               </div>
 
+            </motion.div>
+          </div>
+        )}
+
+        {/* Lab Report Scanner Modal Dialog */}
+        {isScannerOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-4xl max-h-[92vh] flex flex-col"
+            >
+              <LabReportScanner
+                onApplyData={handleApplyLabReportData}
+                onClose={() => setIsScannerOpen(false)}
+                isModal={true}
+                theme="doctor"
+              />
             </motion.div>
           </div>
         )}

@@ -1,4 +1,5 @@
 export interface PatientData {
+  name?: string;
   age: number;
   sex: "male" | "female";
   height: number;
@@ -92,4 +93,28 @@ export interface PredictionResult {
   multiCvd: MultiCvdModule[];
   counterfactuals: CounterfactualScenario[];
   timestamp: string;
+}
+
+export interface LabReportExtractedBiomarker {
+  name: string;
+  value: number | string;
+  unit: string;
+  referenceRange: string;
+  status: "normal" | "high" | "low" | "critical";
+  clinicalNote?: string;
+}
+
+export interface LabReportScanResult {
+  reportTitle: string;
+  patientName?: string;
+  reportDate?: string;
+  laboratoryName?: string;
+  confidenceScore: number;
+  extractedPatientData: PatientData;
+  biomarkers: LabReportExtractedBiomarker[];
+  keyFindings: string[];
+  clinicalSummary: string;
+  laymanSummary: string;
+  recommendations?: string[];
+  rawOcrSnippet?: string;
 }
